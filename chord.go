@@ -3,7 +3,6 @@ package chord
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -41,7 +40,7 @@ func NewChord(
 	channel string,
 	responses ResponsesMapType,
 	process BackgroundProcessType,
-) *Chord {
+) (*Chord, error) {
 	chd = &Chord{
 		authenticationToken: authenticationToken,
 		guild:               guild,
@@ -51,7 +50,7 @@ func NewChord(
 	}
 	sesh, err := discordgo.New("Bot " + authenticationToken)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	chd.session = sesh
 
@@ -61,16 +60,18 @@ func NewChord(
 	chd.session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages)
 	err = chd.session.Open()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+
 	fmt.Println("Bot is running. ctrl-c to exit.")
 
 	// create a channel to pass information from testBackgroundProcess to a process waiting to send messages to the guild
 	messages := make(chan string)
 	channelID, err := getChannelID(chd)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+
 	// start processes
 	go messageSenderUnprompted(chd.session, channelID, messages)
 	go chd.process(messages)
@@ -79,7 +80,7 @@ func NewChord(
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
 	chd.session.Close()
-	return chd
+	return chd, nil
 }
 
 func messageResponder(s *discordgo.Session, m *discordgo.MessageCreate) {
