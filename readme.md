@@ -2,6 +2,8 @@
 
 A declarative way to spin up a simple discord bot with a map of possible responses and a single background process for sending unprompted messages.
 
-# Dependencies
+# Installation
+> go get github.com/mrgarelli/chord
 
-* [discordgo](https://github.com/bwmarrin/discordgo)
+### Dependencies
+> go get github.com/bwmarrin/discordgo
